@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-# metadefender-menlo-integration
-MetaDefender Core integration to Menlo Security
-=======
 # MetaDefender Core - Menlo Security Middleware
 
 ## Middleware documentation
@@ -65,7 +61,7 @@ Can also run in a Docker container, a [Dockerfile](Dockerfile) is made available
 ##### Step 1: Deploy Integration Middleware
 
 First, clone this repository: 
-`git clone https://github.com/georgeprihici/metadefender-menlo-integration.git`
+`git clone https://github.com/georgeprichici/metadefender-menlo-integration.git`
 
 Second, install all dependencies: 
 `pip install -r requirements.txt`
@@ -115,4 +111,3 @@ See the [Middleware Documentation](#Middleware-documentation) for details.
 3. Try to download the PDF
 4. You should see the File Download request in the Admin Console (Logs > Web Logs)
 5. Click on the table entry and you'll see the analyis details on the right side. 
->>>>>>> README file including integration guide.
