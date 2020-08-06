@@ -1,4 +1,4 @@
-# MetaDefender Core - Menlo Security Middleware
+# MetaDefender - Menlo Security Middleware
 
 ## Middleware documentation
 Make sure you have `python3.5` or above installed. 
@@ -12,12 +12,14 @@ To run the app:
 
 Middleware should be configured using the [config](config.yml) file:
 ```
-service: metadefender               # MetaDefender Core service is the only current integration allowed
+service: metadefender                       # MetaDefender Core service is the only current integration allowed
 api: 
+  type: core                                # mandatory, should be either `core` or `cloud`
   params:
-    apikey: null                    # optional, but in case MetaDefender Core is configured to request it
-  url: https://localhost:8008       # MetaDefender Core URL - can be HTTP or HTTPS (certificate validation is disabled)
-  cert_file: /certs/server.crt      # Absolute path for the certificate -> in case you require Certification validation for MetaDefender
+    apikey: null                            # optional for MetaDefender Core (in case is configured to request it), but `mandatory for MetaDefender Cloud`
+  url: 
+    core: https://localhost:8008            # MetaDefender Core URL - can be HTTP or HTTPS (certificate validation is disabled)
+    cloud: https://api.metadefender.com/v4  # MetaDefender Cloud URL - this doesn't need to be updated, will be consumed when api type is `cloud`
 server: 
   port: 3000
   host: "0.0.0.0"
@@ -33,7 +35,7 @@ The location can be altered also by modifiying `metadefender_menlo/__main__.py` 
 ## MetaDefender Core - Menlo Security Integration Guide
 
 ### About This Guide
-This document describes the integration of Menlo Security with MetaDefender Core, using the current middleware
+This document describes the integration of Menlo Security with MetaDefender Core and Cloud, using the current middleware
 
 
 ### Integration Overview
@@ -73,10 +75,12 @@ Make sure you place the certs in the right folder (`certs`) and under the right 
 ```
 service: metadefender
 api: 
+  type: core
   params:
-    apikey: null 
-  url: https://localhost:8008
-  cert_file: /certs/server.crt
+    apikey: None
+  url: 
+    core: https://localhost:8008
+    cloud: https://api.metadefender.com/v4    
 server: 
   port: 3000
   host: "0.0.0.0"
@@ -94,12 +98,18 @@ See the [Middleware Documentation](#Middleware-documentation) for details.
     - Plugin Description: `MetaDefender Core API Integration`
     - Base URL: The url of the middleware (e.g. `https://1.2.3.4:3000`)
       - :warning: **HTTPS** is required!
-    - Certificate: the certificate used for the Middleware 
-        - This will be used for certificate validation
+    - Certificate: the certificate (X.509) used for the Middleware 
+        - This will be used for certificate validation        
     - Type of transfers: 
-        - Enable Downloads if MetaDefender is used to scan and sanitize downloaded files
-        - Enable Uploads if MetaDefender will be used to also redact uploaded files
-    - Authorization Header: you can put any dummy data, since this header will be ignored on the Middleware side
+      - Enable Downloads if MetaDefender is used to scan and sanitize downloaded files
+      - Enable Uploads if MetaDefender will be used to also redact uploaded files
+    - Authorization Header: 
+      - For MetaDefender Core: you can put any dummy data, since this header will be ignored on the Middleware side
+      - For MetaDefender Cloud: 
+        - you can choose to input here the apikey instead in the config file 
+        - if so, you'll need to enable the functionality 
+          - uncomment the prepare function in api.handlers.base_handler.py
+        - The main benefit is the ability to switch keys in Menlo admin console, maybe use different keys for different departments/groups. 
     - Hash Check: leave it unchecked, to force a file analysis and sanitization on every file download
     - Metadata Check: leave it unchecked since is not supported in this integration
     - Allow File Replacement: Enable this functionality if you plan to use MetaDefender to sanitize the downloaded files or redact uploaded files
