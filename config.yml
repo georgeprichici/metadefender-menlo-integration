@@ -1,8 +1,12 @@
 service: metadefender
 api: 
+  type: cloud
   params:
-    apikey: null
-  url: https://54.70.169.74:8008
+    apikey: None
+  url: 
+    core: https://54.70.169.74:8008
+    cloud: https://api.metadefender.opswat.com/v4
+  
   cert_file: /certs/server.crt
 server: 
   port: 3000
