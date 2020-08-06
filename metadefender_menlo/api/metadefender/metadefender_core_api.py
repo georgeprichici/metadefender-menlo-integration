@@ -11,7 +11,7 @@ class MetaDefenderCoreAPI(MetaDefenderAPI):
     def __init__(self, url, apikey):
         self.server_url = url
         self.apikey = apikey
-        self.report_url = self.server_url + "#/public/process/dataId/{data_id}"
+        self.report_url = self.server_url + "/#/public/process/dataId/{data_id}"
     
     def _get_submit_file_headers(self, filename, metadata):    
         metadata_str = json.dumps(metadata) if metadata is not None else ""
