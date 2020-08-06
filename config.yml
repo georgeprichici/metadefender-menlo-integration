@@ -2,7 +2,7 @@ service: metadefender
 api: 
   type: core
   params:
-    apikey: None
+    apikey: null
   url: 
     core: https://1.2.3.4:8008
     cloud: https://api.metadefender.com/v4    
