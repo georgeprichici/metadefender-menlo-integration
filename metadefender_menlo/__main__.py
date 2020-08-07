@@ -2,6 +2,8 @@ import yaml
 import os
 import asyncio
 import sys
+import logging
+from logging.handlers import TimedRotatingFileHandler
 
 import tornado.ioloop
 import tornado.web
@@ -28,11 +30,35 @@ settings = dict(
     }
 )
 
+def init_logging(config):    
+    if "enabled" not in config or not config["enabled"]:
+        return
+    
+    logger = logging.getLogger()
+    logger.setLevel(config["level"])
+    logfile = os.path.join(config["logfile"])
+    if not os.path.exists(logfile):        
+        os.makedirs(os.path.dirname(logfile))
+
+    log_handler = TimedRotatingFileHandler(filename=logfile, when="h", interval=config["interval"], backupCount=config["backup_count"])
+    
+    log_format = '%(asctime)s - %(levelname)s - %(filename)s > %(funcName)s:%(lineno)d - %(message)s'
+    formatter = logging.Formatter(fmt=log_format, datefmt='%m/%d/%Y %I:%M:%S %p')
+    log_handler.setFormatter(formatter)
+
+    logger.addHandler(log_handler)
+
 def initial_config():
     
     with open("config.yml", 'r') as stream:
         try:
             config = yaml.safe_load(stream)
+
+            if "logging" in config: 
+                init_logging(config["logging"])
+
+            logging.info("Set API configuration")
+
             api = config["api"]
             md_type = api["type"]
             url = api["url"][md_type] if "url" in api and md_type in api["url"] else "http://localhost:8008"
@@ -42,15 +68,18 @@ def initial_config():
             MetaDefenderAPI.config(url, apikey, md_cls)
             
             if "server" in config:
+                logging.info("Set Server configuration")
                 server_details = config["server"]
                 SERVER_PORT = server_details["port"] if "port" in server_details else SERVER_PORT
                 HOST = server_details["host"] if "host" in server_details else HOST
                 API_VERSION = server_details["api_version"] if "api_version" in server_details else HOST
             
+            
         except yaml.YAMLError as exc:
-            print(exc)
+            logging.exception("Cannot load config file. Details: {0}".format(exc))
 
 def make_app():
+    logging.info("Define endpoints handlers")
     endpoints_list = [
         (API_VERSION + '/check', CheckExistingHandler),
         (API_VERSION + '/inbound', InboundMetadataHandler),
@@ -70,7 +99,9 @@ def main():
     initial_config()
     
     app = make_app()
-    # http_server = tornado.httpserver.HTTPServer(app, **settings)
+    
+    logging.info("Start the app: {0}:{1}".format(HOST, SERVER_PORT))
+
     http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(SERVER_PORT, HOST)
     tornado.ioloop.IOLoop.current().start()
