@@ -24,6 +24,12 @@ server:
   port: 3000
   host: "0.0.0.0"
   api_version: /api/v1
+logging:
+  enabled: true                             # enable or disable logging. 
+  level: INFO                               # select from (NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL) (see https://docs.python.org/3/library/logging.html#levels)
+  logfile: app.log                          # relative (or absolute path) to the logfile. If path doesn't exist will be created (make sure the user has the right permissions)
+  interval: 24                              # the interval (in hours) for log rotation
+  backup_count: 30                          # for how many intervals should the logs be kept (e.g. 30 logs for 24h each -> 30 days logs)
   ```
 
 Menlo requires all communication to be done over https, so the Middleware expects the certificates to be in the repository folder, under `certs`: 
@@ -77,7 +83,7 @@ service: metadefender
 api: 
   type: core
   params:
-    apikey: None
+    apikey: null
   url: 
     core: https://localhost:8008
     cloud: https://api.metadefender.com/v4    
@@ -85,6 +91,12 @@ server:
   port: 3000
   host: "0.0.0.0"
   api_version: /api/v1
+logging:
+  enabled: true
+  level: INFO
+  logfile: app.log
+  interval: 24
+  backup_count: 30
   ```
 See the [Middleware Documentation](#Middleware-documentation) for details. 
 
