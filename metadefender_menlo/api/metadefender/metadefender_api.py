@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import datetime
 import os
 import json
+import logging
 
 
 class MetaDefenderAPI(ABC):
@@ -50,7 +51,7 @@ class MetaDefenderAPI(ABC):
         pass
     
     async def submit_file(self, filename, fp, analysis_callback_url=None, metadata=None):  
-        print("Submit file > filename: {0} ".format(filename))   
+        logging.info("Submit file > filename: {0} ".format(filename))   
     
         headers = self._get_submit_file_headers(filename, metadata)
         
@@ -59,7 +60,7 @@ class MetaDefenderAPI(ABC):
         return (json_response, http_status)
 
     async def retrieve_result(self, data_id):
-        print("MetaDefender > Retrieve result for {0}".format(data_id))
+        logging.info("MetaDefender > Retrieve result for {0}".format(data_id))
         
         analysis_completed = False
         
@@ -73,11 +74,11 @@ class MetaDefenderAPI(ABC):
         return (json_response, http_status)
 
     async def check_result(self, data_id):
-        print("MetaDefender > Check result for {0}".format(data_id))        
+        logging.info("MetaDefender > Check result for {0}".format(data_id))        
         return await self._request_as_json_status("retrieve_result", fields={"data_id": data_id})
     
     async def hash_lookup(self, sha256):
-        print("MetaDefender > Hash Lookup for {0}".format(sha256))    
+        logging.info("MetaDefender > Hash Lookup for {0}".format(sha256))    
         return await self._request_as_json_status("hash_lookup", fields={"hash": sha256})
     
     @abstractmethod
@@ -93,7 +94,7 @@ class MetaDefenderAPI(ABC):
 
     async def _request_status(self, endpoint_id, fields=None, headers=None, body=None):
 
-        print("MetaDefender Request > ({0}) for {1}".format(endpoint_id, fields))   
+        logging.info("MetaDefender Request > ({0}) for {1}".format(endpoint_id, fields))   
 
         endpoint_details = self.api_endpoints[endpoint_id]
         endpoint_path = endpoint_details["endpoint"]
@@ -105,10 +106,11 @@ class MetaDefenderAPI(ABC):
         if self.apikey is not None: 
             if not headers:
                 headers = {}
+            logging.debug("Add apikey: {0}".format(self.apikey))
             headers["apikey"] = self.apikey
 
         before_submission = datetime.datetime.now()        
-        print("Request [{0}]: {1}".format(request_method, metadefender_url))
+        logging.info("Request [{0}]: {1}".format(request_method, metadefender_url))
 
         http_client = AsyncHTTPClient(None, defaults=dict(user_agent="MenloTornadoIntegration", validate_cert=False))
         response = await http_client.fetch(request=metadefender_url, method=request_method, headers=headers, body=body)
@@ -116,6 +118,6 @@ class MetaDefenderAPI(ABC):
         http_status = response.code                        
         total_submission_time = datetime.datetime.now() - before_submission
 
-        print("{timestamp} {name} >> time: {total_time}, http status: {status}".format(timestamp=before_submission, name=endpoint_id, total_time=total_submission_time, status=http_status))                
+        logging.info("{timestamp} {name} >> time: {total_time}, http status: {status}".format(timestamp=before_submission, name=endpoint_id, total_time=total_submission_time, status=http_status))                
 
         return (response.body, http_status)

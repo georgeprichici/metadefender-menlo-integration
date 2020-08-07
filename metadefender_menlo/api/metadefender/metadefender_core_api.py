@@ -4,6 +4,7 @@ from metadefender_menlo.api.metadefender.metadefender_api import MetaDefenderAPI
 import datetime
 import os
 import json
+import logging
 
 
 class MetaDefenderCoreAPI(MetaDefenderAPI):
@@ -20,10 +21,11 @@ class MetaDefenderCoreAPI(MetaDefenderAPI):
             "filename": filename,             
             "metadata": metadata_str
         }
+        logging.debug("Add headers: {0}".format(headers))
         return headers
     
     async def retrieve_sanitized_file(self, data_id):        
-        print("MetaDefender > Retrieve Sanitized file for {0}".format(data_id))
+        logging.info("MetaDefender > Retrieve Sanitized file for {0}".format(data_id))
         response, http_status = await self._request_status("sanitized_file", fields={"data_id": data_id})
         
         return (response, http_status)

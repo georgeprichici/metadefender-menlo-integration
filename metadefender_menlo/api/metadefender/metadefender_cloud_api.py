@@ -4,6 +4,7 @@ from metadefender_menlo.api.metadefender.metadefender_api import MetaDefenderAPI
 import datetime
 import os
 import json
+import logging
 
 
 class MetaDefenderCloudAPI(MetaDefenderAPI):
@@ -21,20 +22,21 @@ class MetaDefenderCloudAPI(MetaDefenderAPI):
             "Content-Type": "application/octet-stream", 
             "rule": "multiscan,sanitize,unarchive"
         }
+        logging.debug("Add headers: {0}".format(headers))
         return headers
     
     async def retrieve_sanitized_file(self, data_id):        
-        print("MetaDefender > Retrieve Sanitized file for {0}".format(data_id))
+        logging.info("MetaDefender > Retrieve Sanitized file for {0}".format(data_id))
         response, http_status = await self._request_as_json_status("sanitized_file", fields={"data_id": data_id})
 
         if "sanitizedFilePath" in response:
             fileurl = response["sanitizedFilePath"]
-            print("Download Sanitized file from {path}".format(path=fileurl))
+            logging.info("Download Sanitized file from {path}".format(path=fileurl))
             
-            http_client = AsyncHTTPClient(None, defaults=dict(user_agent="MenloTornadoIntegration", validate_cert=False))
+            http_client = AsyncHTTPClient(None, defaults=dict(user_agent="MetaDefenderMenloMiddleware", validate_cert=False))
             response = await http_client.fetch(request=fileurl, method="GET")
             http_status = response.code            
             return (response.body, http_status)
         else:
-            print("Sanitized file not available!")
+            logging.info("Sanitized file not available!")
         return (response, http_status)
