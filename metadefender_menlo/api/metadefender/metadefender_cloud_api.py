@@ -1,0 +1,40 @@
+# import requests
+from tornado.httpclient import AsyncHTTPClient
+from metadefender_menlo.api.metadefender.metadefender_api import MetaDefenderAPI
+import datetime
+import os
+import json
+
+
+class MetaDefenderCloudAPI(MetaDefenderAPI):
+    
+    def __init__(self, url, apikey):
+        self.server_url = url
+        self.apikey = apikey
+        self.report_url = "https://metadefender.opswat.com/results/file/{data_id}/regular/overview"
+    
+    def _get_submit_file_headers(self, filename, metadata):    
+        metadata_str = json.dumps(metadata) if metadata is not None else ""
+    
+        headers = {
+            "filename": filename, 
+            "Content-Type": "application/octet-stream", 
+            "rule": "multiscan,sanitize,unarchive"
+        }
+        return headers
+    
+    async def retrieve_sanitized_file(self, data_id):        
+        print("MetaDefender > Retrieve Sanitized file for {0}".format(data_id))
+        response, http_status = await self._request_as_json_status("sanitized_file", fields={"data_id": data_id})
+
+        if "sanitizedFilePath" in response:
+            fileurl = response["sanitizedFilePath"]
+            print("Download Sanitized file from {path}".format(path=fileurl))
+            
+            http_client = AsyncHTTPClient(None, defaults=dict(user_agent="MenloTornadoIntegration", validate_cert=False))
+            response = await http_client.fetch(request=fileurl, method="GET")
+            http_status = response.code            
+            return (response.body, http_status)
+        else:
+            print("Sanitized file not available!")
+        return (response, http_status)

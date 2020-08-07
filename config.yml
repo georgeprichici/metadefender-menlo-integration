@@ -1,9 +1,11 @@
 service: metadefender
 api: 
+  type: core
   params:
     apikey: null
-  url: https://54.70.169.74:8008
-  cert_file: /certs/server.crt
+  url: 
+    core: https://1.2.3.4:8008
+    cloud: https://api.metadefender.com/v4    
 server: 
   port: 3000
   host: "0.0.0.0"

@@ -1,4 +1,4 @@
-from metadefender_menlo.api.metadefender.metadefender_core_api import MetaDefenderCoreAPI
+from metadefender_menlo.api.metadefender.metadefender_api import MetaDefenderAPI
 from metadefender_menlo.api.responses.base_response import BaseResponse
 from metadefender_menlo.api.models.file_analysis_response import FileAnalysisResponse
 
@@ -22,7 +22,7 @@ class FileAnalyis(BaseResponse):
                 model.outcome = 'clean' if json_response['process_info']['result'] == 'Allowed' else 'infected'
             else:
                 model.outcome = 'unknown'
-            model.report_url = MetaDefenderCoreAPI.server_url + '/#/public/process/dataId/' + json_response['data_id']
+            model.report_url = MetaDefenderAPI.get_instance().report_url.format(data_id=json_response['data_id'])
             model.filename = json_response['file_info']['display_name']
 
             post_process = json_response['process_info']['post_processing']

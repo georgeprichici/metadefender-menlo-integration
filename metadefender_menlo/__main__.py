@@ -11,7 +11,9 @@ from metadefender_menlo.api.handlers.retrieve_sanitized import RetrieveSanitized
 from metadefender_menlo.api.handlers.check_existing import CheckExistingHandler
 
 from metadefender_menlo.api.models.file_submit_body import FileSubmitBody
+from metadefender_menlo.api.metadefender.metadefender_api import MetaDefenderAPI
 from metadefender_menlo.api.metadefender.metadefender_core_api import MetaDefenderCoreAPI
+from metadefender_menlo.api.metadefender.metadefender_cloud_api import MetaDefenderCloudAPI
 
 SERVER_PORT = 3000
 HOST = "0.0.0.0"
@@ -30,12 +32,13 @@ def initial_config():
         try:
             config = yaml.safe_load(stream)
             api = config["api"]
-            url = api["url"] if "url" in api else "http://localhost:8008"
+            md_type = api["type"]
+            url = api["url"][md_type] if "url" in api and md_type in api["url"] else "http://localhost:8008"
             apikey = api["params"]["apikey"] if "params" in api and "apikey" in api["params"] else None
-            cert_file =api["params"]["cert_file"] if "params" in api and "cert_file" in api["params"] else None
-
-            MetaDefenderCoreAPI.config(url, apikey, cert_file)
-
+            
+            md_cls = MetaDefenderCoreAPI if md_type == "core" else MetaDefenderCloudAPI
+            MetaDefenderAPI.config(url, apikey, md_cls)
+            
             if "server" in config:
                 server_details = config["server"]
                 SERVER_PORT = server_details["port"] if "port" in server_details else SERVER_PORT
@@ -59,7 +62,8 @@ def main():
     initial_config()
     
     app = make_app()
-    http_server = tornado.httpserver.HTTPServer(app, **settings)
+    # http_server = tornado.httpserver.HTTPServer(app, **settings)
+    http_server = tornado.httpserver.HTTPServer(app)
     http_server.listen(SERVER_PORT, HOST)
     tornado.ioloop.IOLoop.current().start()
 

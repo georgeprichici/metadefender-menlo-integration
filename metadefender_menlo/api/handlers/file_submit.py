@@ -1,11 +1,11 @@
 import tornado
 from tornado.web import HTTPError
 
-from metadefender_menlo.api.metadefender.metadefender_core_api import MetaDefenderCoreAPI
 from metadefender_menlo.api.responses.file_submit import FileSubmit
 from metadefender_menlo.api.handlers.base_handler import BaseHandler
 
 class FileSubmitHandler(BaseHandler):
+
     async def post(self):   
 
         if len(self.request.files) < 1:
@@ -25,9 +25,7 @@ class FileSubmitHandler(BaseHandler):
             metadata[arg] = str(self.request.arguments[arg])
 
 
-        # make request to MetaDefender 
-        mdapi = MetaDefenderCoreAPI()
-
-        json_response, http_status = await mdapi.submit_file(filename, fp, metadata=metadata)    
+        # make request to MetaDefender         
+        json_response, http_status = await self.metaDefenderAPI.submit_file(filename, fp, metadata=metadata)    
         json_response, http_status = FileSubmit().handle_response(http_status, json_response)
         self.json_response(json_response, http_status)
