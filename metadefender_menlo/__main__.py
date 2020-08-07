@@ -1,5 +1,7 @@
 import yaml
 import os
+import asyncio
+import sys
 
 import tornado.ioloop
 import tornado.web
@@ -59,6 +61,12 @@ def make_app():
     return tornado.web.Application(endpoints_list)
 
 def main():    
+    
+    # ugly patch to address https://github.com/tornadoweb/tornado/issues/2608
+    # asyncio won't work on Windows when using python 3.8+
+    if sys.version_info[0]==3 and sys.version_info[1] >= 8 and sys.platform.startswith('win'):
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
     initial_config()
     
     app = make_app()
