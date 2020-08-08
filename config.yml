@@ -13,7 +13,7 @@ server:
 logging:
   enabled: true
   level: INFO
-  logfile: app.log
+  logfile: /var/log/md-menlo/app.log
   interval: 24
   backup_count: 30
 
