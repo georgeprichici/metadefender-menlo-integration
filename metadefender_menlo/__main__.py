@@ -36,7 +36,7 @@ def init_logging(config):
     
     logger = logging.getLogger()
     logger.setLevel(config["level"])
-    logfile = os.path.join(config["logfile"])
+    logfile = config["logfile"]
     if not os.path.exists(logfile):        
         os.makedirs(os.path.dirname(logfile))
 
