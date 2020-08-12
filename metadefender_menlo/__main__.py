@@ -86,7 +86,7 @@ def initial_config():
 def make_app():
     logging.info("Define endpoints handlers")
     endpoints_list = [
-        (API_VERSION + '/health', HealthCheckHandler),
+        (API_VERSION + '/', HealthCheckHandler),
         (API_VERSION + '/check', CheckExistingHandler),
         (API_VERSION + '/inbound', InboundMetadataHandler),
         (API_VERSION + '/submit', FileSubmitHandler),

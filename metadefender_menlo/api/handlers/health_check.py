@@ -4,4 +4,4 @@ import logging
 class HealthCheckHandler(BaseHandler):
     def get(self):        
         logging.warning("GET /health > OK!")        
-        self.json_response({"status": "Ready"}, 200)
+        self.json_response({"status": "Ready", "name": "MetaDefender - Menlo integration"}, 200)
