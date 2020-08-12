@@ -10,14 +10,13 @@ server:
   port: 3000
   host: "0.0.0.0"
   api_version: /api/v1
+https:
+  load_local: false
+  crt: /tmp/certs/server.crt
+  key: /tmp/certs/server.key
 logging:
   enabled: true
   level: INFO
   logfile: /var/log/md-menlo/app.log
   interval: 24
   backup_count: 30
-
-
-  
-
-
