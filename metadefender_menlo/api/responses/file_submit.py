@@ -5,13 +5,14 @@ class FileSubmit(BaseResponse):
 
     def __init__(self, allowedResponses=None):
         
-        allowedResponses = [200, 400, 411, 422, 500, 503]
+        allowedResponses = [200, 400, 401, 411, 422, 500, 503]
         super().__init__(allowedResponses)
 
         
         self._http_responses["200"] = self.__response200
         self._http_responses["411"] = self.__response411
         self._http_responses["400"] = self.__response400
+        self._http_responses["401"] = self.__response400
 
     def __response200(self, json_response, status_code):
         translation = {

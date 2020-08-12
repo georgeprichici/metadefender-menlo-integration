@@ -24,12 +24,7 @@ SERVER_PORT = 3000
 HOST = "0.0.0.0"
 API_VERSION = "/api/v1"
 
-settings = dict(
-    ssl_options = {
-        "certfile": os.path.join("certs/server.crt"),
-        "keyfile": os.path.join("certs/server.key"),
-    }
-)
+settings = {}
 
 def init_logging(config):    
     if "enabled" not in config or not config["enabled"]:
@@ -72,6 +67,15 @@ def initial_config():
             md_cls = MetaDefenderCoreAPI if md_type == "core" else MetaDefenderCloudAPI
             MetaDefenderAPI.config(url, apikey, md_cls)
             
+            if "https" in config: 
+                if "load_local" in config["https"] and config["https"]["load_local"]:
+                    
+                    settings["ssl_options"] = {
+                        "certfile": os.path.join(config["https"]["crt"]),
+                        "keyfile": os.path.join(config["https"]["key"]),
+                    }
+                    
+
             if "server" in config:
                 logging.info("Set Server configuration")
                 server_details = config["server"]
@@ -109,7 +113,7 @@ def main():
     
     logging.info("Start the app: {0}:{1}".format(HOST, SERVER_PORT))
 
-    http_server = tornado.httpserver.HTTPServer(app)
+    http_server = tornado.httpserver.HTTPServer(app, **settings)
     http_server.listen(SERVER_PORT, HOST)
     tornado.ioloop.IOLoop.current().start()
 
