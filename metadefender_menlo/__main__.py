@@ -13,6 +13,7 @@ from metadefender_menlo.api.handlers.file_metadata import InboundMetadataHandler
 from metadefender_menlo.api.handlers.file_submit import FileSubmitHandler
 from metadefender_menlo.api.handlers.retrieve_sanitized import RetrieveSanitizedHandler
 from metadefender_menlo.api.handlers.check_existing import CheckExistingHandler
+from metadefender_menlo.api.handlers.health_check import HealthCheckHandler
 
 from metadefender_menlo.api.models.file_submit_body import FileSubmitBody
 from metadefender_menlo.api.metadefender.metadefender_api import MetaDefenderAPI
@@ -63,6 +64,10 @@ def initial_config():
             md_type = api["type"]
             url = api["url"][md_type] if "url" in api and md_type in api["url"] else "http://localhost:8008"
             apikey = api["params"]["apikey"] if "params" in api and "apikey" in api["params"] else None
+
+            env_apikey = os.environ.get('apikey')
+            if env_apikey:
+                apikey = env_apikey
             
             md_cls = MetaDefenderCoreAPI if md_type == "core" else MetaDefenderCloudAPI
             MetaDefenderAPI.config(url, apikey, md_cls)
@@ -81,6 +86,7 @@ def initial_config():
 def make_app():
     logging.info("Define endpoints handlers")
     endpoints_list = [
+        (API_VERSION + '/health', HealthCheckHandler),
         (API_VERSION + '/check', CheckExistingHandler),
         (API_VERSION + '/inbound', InboundMetadataHandler),
         (API_VERSION + '/submit', FileSubmitHandler),
