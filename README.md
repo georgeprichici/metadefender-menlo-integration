@@ -24,6 +24,10 @@ server:
   port: 3000
   host: "0.0.0.0"
   api_version: /api/v1
+https:
+  load_local: false                         # enable https by using locally stored certs
+  crt: /tmp/certs/server.crt                # location of the public key
+  key: /tmp/certs/server.key                # location of the private key
 logging:
   enabled: true                             # enable or disable logging. 
   level: INFO                               # select from (NOTSET, DEBUG, INFO, WARNING, ERROR, CRITICAL) (see https://docs.python.org/3/library/logging.html#levels)
@@ -32,9 +36,8 @@ logging:
   backup_count: 30                          # for how many intervals should the logs be kept (e.g. 30 logs for 24h each -> 30 days logs)
   ```
 
-Menlo requires all communication to be done over https, so the Middleware expects the certificates to be in the repository folder, under `certs`: 
-* certfile:`certs/server.crt`
-* keyfile: `certs/server.key`
+Menlo requires all communication to be done over https, so either deploy an reverse proxy (nginx) in front of it to handle SSL or use the configuration `https` in the `config.yml`. 
+You can add self-signed X509 certs, but have to be signed by a (custom) Certificate Authority. The rootCA public key will be required to be uploaded to Menlo Security Web Policy configuration. 
 
 The location can be altered also by modifiying `metadefender_menlo/__main__.py` at lines 22-23. 
 
@@ -81,20 +84,24 @@ Make sure you place the certs in the right folder (`certs`) and under the right 
 ```
 service: metadefender
 api: 
-  type: core
+  type: cloud
   params:
     apikey: null
   url: 
-    core: https://localhost:8008
+    core: https://1.2.3.4:8008
     cloud: https://api.metadefender.com/v4    
 server: 
   port: 3000
   host: "0.0.0.0"
   api_version: /api/v1
+https:
+  load_local: false
+  crt: /tmp/certs/server.crt
+  key: /tmp/certs/server.key
 logging:
   enabled: true
   level: INFO
-  logfile: app.log
+  logfile: /var/log/md-menlo/app.log
   interval: 24
   backup_count: 30
   ```
