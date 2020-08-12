@@ -25,6 +25,13 @@ class MetaDefenderCloudAPI(MetaDefenderAPI):
         logging.debug("Add headers: {0}".format(headers))
         return headers
     
+    def _check_analysis_complete(self, json_response):
+        if ("sanitized" in json_response and "progress_percentage" in json_response["sanitized"]):
+            return json_response["sanitized"]["progress_percentage"] == 100
+        else:
+            print("Unexpected response from MetaDefender: {0}".format(json_response))
+            return False
+        
     async def retrieve_sanitized_file(self, data_id):        
         logging.info("MetaDefender > Retrieve Sanitized file for {0}".format(data_id))
         response, http_status = await self._request_as_json_status("sanitized_file", fields={"data_id": data_id})

@@ -1,5 +1,6 @@
 # import requests
 from tornado.httpclient import AsyncHTTPClient
+from tornado.httpclient import HTTPClientError
 from abc import ABC, abstractmethod
 import datetime
 import os
@@ -50,6 +51,10 @@ class MetaDefenderAPI(ABC):
     def _get_submit_file_headers(self, filename, metadata):
         pass
     
+    @abstractmethod
+    def check_analysis_complete(self, json_response):
+        pass
+    
     async def submit_file(self, filename, fp, analysis_callback_url=None, metadata=None):  
         logging.info("Submit file > filename: {0} ".format(filename))   
     
@@ -66,10 +71,7 @@ class MetaDefenderAPI(ABC):
         
         while (not analysis_completed):            
             json_response, http_status = await self.check_result(data_id)
-            if ("process_info" in json_response and "progress_percentage" in json_response["process_info"]):
-                analysis_completed = json_response["process_info"]["progress_percentage"] == 100
-            else:
-                print("Unexpected response from MetaDefender: {0}".format(json_response))
+            analysis_completed = self._check_analysis_complete(json_response)            
         
         return (json_response, http_status)
 
@@ -112,12 +114,22 @@ class MetaDefenderAPI(ABC):
         before_submission = datetime.datetime.now()        
         logging.info("Request [{0}]: {1}".format(request_method, metadefender_url))
 
+        http_status = None
+        response_body = None
         http_client = AsyncHTTPClient(None, defaults=dict(user_agent="MenloTornadoIntegration", validate_cert=False))
-        response = await http_client.fetch(request=metadefender_url, method=request_method, headers=headers, body=body)
-        
-        http_status = response.code                        
+        try:
+            response = await http_client.fetch(request=metadefender_url, method=request_method, headers=headers, body=body)
+            http_status = response.code
+            response_body = response.body
+        except HTTPClientError as error:
+            http_status = error.code
+            response_body = '{"error": "' + error.message + '"}'
+        except:
+            http_status = 500
+            response_body = "Internal Server Error"        
+                            
         total_submission_time = datetime.datetime.now() - before_submission
 
         logging.info("{timestamp} {name} >> time: {total_time}, http status: {status}".format(timestamp=before_submission, name=endpoint_id, total_time=total_submission_time, status=http_status))                
 
-        return (response.body, http_status)
+        return (response_body, http_status)
