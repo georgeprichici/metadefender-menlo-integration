@@ -33,8 +33,6 @@ def init_logging(config):
     logger = logging.getLogger()
     logger.setLevel(config["level"])
     logfile = config["logfile"]
-    if not os.path.exists(logfile):        
-        os.makedirs(os.path.dirname(logfile))
 
     log_handler = TimedRotatingFileHandler(filename=logfile, when="h", interval=config["interval"], backupCount=config["backup_count"])
     
@@ -71,8 +69,8 @@ def initial_config():
                 if "load_local" in config["https"] and config["https"]["load_local"]:
                     
                     settings["ssl_options"] = {
-                        "certfile": os.path.join(config["https"]["crt"]),
-                        "keyfile": os.path.join(config["https"]["key"]),
+                        "certfile": config["https"]["crt"],
+                        "keyfile": config["https"]["key"],
                     }
                     
 
