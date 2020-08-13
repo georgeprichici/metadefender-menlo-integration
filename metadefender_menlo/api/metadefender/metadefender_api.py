@@ -124,9 +124,9 @@ class MetaDefenderAPI(ABC):
         except HTTPClientError as error:
             http_status = error.code
             response_body = '{"error": "' + error.message + '"}'
-        except:
+        except Exception as e:
             http_status = 500
-            response_body = "Internal Server Error"        
+            response_body = '{"error": "' + e.strerror + '"}'
                             
         total_submission_time = datetime.datetime.now() - before_submission
 
