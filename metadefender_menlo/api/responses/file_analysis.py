@@ -17,7 +17,7 @@ class FileAnalyis(BaseResponse):
             return (json_response, 404)
         else:
             model = FileAnalysisResponse()
-            analysis_completed = MetaDefenderAPI.get_instance().check_analysis_completed(json_response)
+            analysis_completed = MetaDefenderAPI.get_instance().check_analysis_complete(json_response)
 
             model.result = 'pending' if not analysis_completed else 'completed'
             if model.result == 'completed':
