@@ -24,7 +24,7 @@ class MetaDefenderCoreAPI(MetaDefenderAPI):
         logging.debug("Add headers: {0}".format(headers))
         return headers
     
-    def _check_analysis_complete(self, json_response):
+    def check_analysis_complete(self, json_response):
         if ("process_info" in json_response and "progress_percentage" in json_response["process_info"]):
             return json_response["process_info"]["progress_percentage"] == 100
         else:
