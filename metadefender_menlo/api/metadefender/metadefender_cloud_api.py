@@ -25,7 +25,7 @@ class MetaDefenderCloudAPI(MetaDefenderAPI):
         logging.debug("Add headers: {0}".format(headers))
         return headers
     
-    def _check_analysis_complete(self, json_response):
+    def check_analysis_complete(self, json_response):
         if ("sanitized" in json_response and "progress_percentage" in json_response["sanitized"]):
             return json_response["sanitized"]["progress_percentage"] == 100
         else:
