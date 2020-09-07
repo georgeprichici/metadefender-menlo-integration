@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metadefender-menlo-deployment
+spec:
+  selector:
+    matchLabels:
+      app: metadefender-menlo
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: metadefender-menlo
+    spec:
+      containers:
+      - name: "metadefender-menlo-integration"
+        image: "gcr.io/menlo-kube/github.com/georgeprichici/metadefender-menlo-integration:ea365070f33ef35a06b9e073a9a523b5460edcdf"
+        env:
+        - name: "apikey"
+          value: "<<MetaDefender-Cloud-apikey>>"
+        livenessProbe:
+          httpGet:
+            path: /api/v1/health
+            port: 3000
+          initialDelaySeconds: 3
+          periodSeconds: 10
