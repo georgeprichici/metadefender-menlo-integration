@@ -41,6 +41,27 @@ You can add self-signed X509 certs, but have to be signed by a (custom) Certific
 
 The location can be altered also by modifiying `metadefender_menlo/__main__.py` at lines 22-23. 
 
+## Kubernetes deployment
+First, you’re required to build a container. There’s a `Dockerfile` in the repo, that you can use to build the container and push it to your registry. Once you have it, you will have to modify deployment.yaml and specify your own container image. 
+
+Also, check the `deploy.sh` script. It was built specifically for Google Cloud to leverage GKE (Google Kubernetes Engine). But it can be easily adapted to run in any Kubernetes supported environment. 
+
+The GCP specific part is building the cluster and (if needed) the static IP. 
+
+Modify the deploy script to use your own cluster and certificates as needed. If you don’t require self-signed certs, you can remove the entire portion with openssl and jump directly to adding your certificates as Kubernetes secrets. 
+
+Check `deployment.yaml` and place the real `apikey` (if you plan to use MetaDefender Cloud), or just remove that environment variable entirely if it is not going to be used. You can also set the apikey in the config file, if you prefer to have it hardcoded in the container image, instead of passing it as an environment variable. 
+
+```
+containers:
+- name: "metadefender-menlo-integration"     
+  image: "<<middleware-container>>"         # Build your own container using the Dockerfile provided in the repository
+  env:
+  - name: "apikey"
+    value: "<<MetaDefender-Cloud-apikey>>"  # Set your private apikey if you will integrate with MetaDefender Cloud
+```
+
+
 ## MetaDefender Core - Menlo Security Integration Guide
 
 ### About This Guide
