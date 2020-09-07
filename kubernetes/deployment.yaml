@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: "metadefender-menlo-integration"
-        image: "gcr.io/menlo-kube/github.com/georgeprichici/metadefender-menlo-integration:ea365070f33ef35a06b9e073a9a523b5460edcdf"
+        image: "<<middleware-container>>"
         env:
         - name: "apikey"
           value: "<<MetaDefender-Cloud-apikey>>"

@@ -20,7 +20,7 @@ echo "[STEP 3a]: Create non-password rootCA key"
 openssl genrsa -out rootCA.key 4096
 
 echo "[STEP 3b]: Create and self sign the Root Certificate (rootCA.crt will be used also in Menlo Web Policy config)"
-openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -subj "/C=US/ST=CA/O=OPSWAT, Inc./CN=$DOMAIN" -out rootCA.crt
+openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 1024 -subj "/C=US/ST=CA/O=Corporation, Inc./CN=$DOMAIN" -out rootCA.crt
 
 echo "[STEP 3c]: Create non-password server key"
 openssl genrsa -out tls.key 2048
@@ -40,7 +40,7 @@ ST=California
 L=San Francisco
 O=Product
 OU=Product
-emailAddress=noreply@opswat.com
+emailAddress=noreply@corporation.com
 CN=$DOMAIN 
 
 [ req_ext ]
