@@ -1,5 +1,10 @@
 # MetaDefender - Menlo Security Middleware
 
+## Documentation
+
+[Integration Guide](docs/Menlo%20-%20MetaDefender%20Integration%20Guide.pdf)
+[Menlo Security File Sanitization API](docs/Menlo%20Sanitization%20API.html)
+
 ## Middleware documentation
 Make sure you have `python3.5` or above installed. 
 This Middleware leverages python's async mechanism introduced in `python3.5`
@@ -161,3 +166,8 @@ See the [Middleware Documentation](#Middleware-documentation) for details.
 3. Try to download the PDF
 4. You should see the File Download request in the Admin Console (Logs > Web Logs)
 5. Click on the table entry and you'll see the analyis details on the right side. 
+
+
+## Extras
+[Postman collection](api/Menlo%20Security%20-%20Sanitization%20Public%20API.postman_collection)
+[OpenAPI 3.0 Spec File](api/menlo-sanitization-openapi.yaml)
