@@ -1,0 +1,372 @@
+openapi: 3.0.0
+info: 
+  title: Menlo Security - Sanitization Public API
+  version: "1.2"
+  description:
+      This document outlines the required processing flow and API for a service implementing the
+      Menlo REST API. This configurable interface will allow the MSIP to provide a file to an externally
+      controlled API implementing the following defined interface.
+      The primary purpose of this integration is to submit a file to the external API for additional file
+      processing. The external API can then process the file and make the outcome available to the
+      MSIP. Along with sending the file, MSIP will also be able to send specific metadata that can be
+      used for auditing or as part of the analysis process
+servers:
+  - url: http://localhost/api/v1
+paths:
+  /check:
+    get:
+      summary: Check for existing report
+      description: Retrieve existing report, if existing, based on SHA256.
+
+      operationId: hashLookup
+      parameters:
+        - name: sha256
+          description: The SHA256 for the file
+          in: query
+          required: true
+          schema:
+            type: string
+            example: "<<SHA256 example>>"
+      responses:
+        '200':
+          $ref: "#/components/responses/Success200"
+        '404':
+          description: Hash not found
+        '400':
+          $ref: "#/components/responses/Error400"
+        '401':
+          $ref: "#/components/responses/Error401"                        
+        '500':
+          $ref: "#/components/responses/Error500"
+        '503':
+          $ref: "#/components/responses/Error503"
+
+  /inbound:
+    post:
+      summary: File metadata
+      description: Provide file metadata
+      requestBody:
+        content: 
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InboundRequestBody'
+      responses:
+        '200':
+          $ref: '#/components/responses/InboundResponse200'
+        '400':
+          $ref: "#/components/responses/Error400"
+        '401':
+          $ref: "#/components/responses/Error401"                        
+        '500':
+          $ref: "#/components/responses/Error500"
+        '503':
+          $ref: "#/components/responses/Error503"
+  /submit:
+    post:
+      summary: File submission
+      description: Submit the file for analysis
+      requestBody:
+        content: 
+          multipart/form-data:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/InboundRequestBody'
+                - $ref: '#/components/schemas/FileSubmitBodyWithInboundCheck'
+      responses:
+        '200':
+          $ref: '#/components/responses/InboundResponse200'
+        '400':
+          $ref: "#/components/responses/Error400"
+        '401':
+          $ref: "#/components/responses/Error401"     
+        '422':
+          $ref: "#/components/responses/Error422"                        
+        '500':
+          $ref: "#/components/responses/Error500"
+        '503':
+          $ref: "#/components/responses/Error503"
+
+  /result:
+    get:
+      summary: Get result
+      description: Retrieve the full analysis result. 
+      parameters:
+        - $ref: '#/components/parameters/uuid'
+      responses:
+        '200':
+          description: Result returned successfully. 
+          content: 
+            multipart/form-data:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/FileAllowedResponse'
+                  - $ref: '#/components/schemas/FileBlockedResponse'
+                  - $ref: '#/components/schemas/FileBlockedError'
+                discriminator:
+                  propertyName: outcome
+                  mapping:
+                    clean: '#/components/schemas/FileAllowedResponse'
+                    infected: '#/components/schemas/FileBlockedResponse'
+                    error: '#/components/schemas/FileBlockedError'
+                    unknown: '#/components/schemas/FileUnknownResponse' 
+        '400':
+          $ref: "#/components/responses/Error400"
+        '401':
+          $ref: "#/components/responses/Error401"                        
+        '404':
+          $ref: "#/components/responses/Error404"
+        '500':
+          $ref: "#/components/responses/Error500"
+        '503':
+          $ref: "#/components/responses/Error503"
+  /file:
+    get:
+      summary: Retrieve sanitized file. 
+      description: >
+        This endpoint will only be invoked if file modification (CDR) is enabled. The /file endpoint will be
+        called after a ‘completed’ result has been returned.
+        If an HTTP 200 is returned, the binary file data in the body will be used to replace the ‘original
+        file’ and used for any subsequent content inspection and download.
+        Optionally the filename can be changed by including a ‘filename’ in the response to the
+        /api/v1/result. Including the filename parameter is essential if the filetype has changed.
+        If an `HTTP 204` is returned, the API will parse this as no modifications to the original file are
+        needed and to use the original.
+      parameters:
+        - $ref: '#/components/parameters/uuid'
+      responses:        
+        '200':        
+          description: The sanitized file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '400':
+          $ref: "#/components/responses/Error400"
+        '401':
+          $ref: "#/components/responses/Error401"                                
+        '500':
+          $ref: "#/components/responses/Error500"
+        '503':
+          $ref: "#/components/responses/Error503"
+components:
+  parameters:
+    uuid:
+      name: uuid
+      description: unique identifier (operation id)
+      schema:
+        type: string
+      in: query
+      required: true
+  schemas:
+    FileResponse: 
+      type: object
+      required:
+        - result
+        - outcome
+        - report_url
+      properties:
+        result:
+          description: The current status of the analysis
+          type: string
+          enum: ["pending", "completed"]
+          example: "pending"
+        outcome:
+          description: The overall analysis result. 
+          type: string
+          enum: ["clean", "infected", "unknown", "error"]
+          example: "clean"
+        report_url:
+          description: A full URL to retrieve the report
+          type: string
+          example: "https://metadefender.corporation.com/file/s0m3l0ngha$h"        
+        filename:
+          description: Optional string of new filename. If not given, will use original
+          type: string
+          example: "original_filename_sanitized_by_MetaDefender.xls"
+    FileAllowedResponse:
+      description: >
+        File processing did not determine the file to be malicious.
+        Continue inspection, allowing the file if no malicious content found.
+      allOf:
+        - $ref: '#/components/schemas/FileResponse'
+        - type: object
+          properties:        
+            modifications: 
+              description: >
+                Array of up to 5 strings of modifications performed on the file by CDR. 
+              type: array
+              items:
+                type: string
+              example: ["Macros - 3 - Removed", "Images - 3 - Sanitized"]
+            filename:
+              description: Optional string of new filename. If not given, will use original
+              type: string
+              example: "original_filename_sanitized_by_MetaDefender.xls"
+    FileBlockedError:
+      description: > 
+        File processing encountered an error.
+        Use MSIP policy action for `Action for transfers which cannot be processed`.
+      allOf:
+        - $ref: '#/components/schemas/FileResponse'
+        - type: object      
+          properties:                
+            error_message:
+              description: Only if outcome is error (string to report in the UI)
+              type: string
+              example: "Invalid file structure"        
+    FileUnknownResponse:
+      description: > 
+        File processing could not process this file.
+        Eg API cannot give a definitive result.
+        Continue inspection, allowing the file if no malicious content found.
+      $ref: '#/components/schemas/FileResponse'
+     
+    FileBlockedResponse:
+      description: >
+        File processing determined the file to be malicious.
+        Block file download.
+      allOf:
+        - $ref: '#/components/schemas/FileResponse'
+        - type: object      
+          properties:                 
+            modifications: 
+              description: >
+                Array of up to 5 strings of modifications performed on the file by CDR. 
+              type: array
+              items:
+                type: string
+              example: ["Macros - 3 - Removed", "Images - 3 - Sanitized"]        
+            outcome_categorization:
+              description: Threat category (e.g. malware, adware, ...).
+              type: string
+              example: "malware"
+            observed_type:
+              description: Array of up to 5 strings of observed types or details, such as virus type
+              type: array
+              items:
+                type: string
+              example: ["Malware", "RAT", "Trojan"]
+            observed_specifics:
+              description: array of up to 5 strings of observed specifics, such as activities.
+              type: array
+              items:
+                type: string
+              example: ["Dropper"]        
+    FileSubmitBodyWithInboundCheck:
+      description: The request body if inbound check is enabled. 
+      type: object
+      properties:
+        uuid:
+          type: string
+          description: unique identifier from /inbound
+    InboundRequestBody:
+      description: All fields required in inbound request body (or file submit).
+      type: object
+      properties:
+        userid:
+          type: string
+          description: The user ID of the user requesting the file
+        srcuri:
+          type: string
+          description: The URI of the original request for the file
+        clientip:
+          type: string
+          description: The detected IP of the client requesting the file. 
+        sha256:
+          type: string
+          description: The sha256 of the requested file
+        filename:
+          type: string
+          description: The filename of the requested file
+        file_type:
+          type: string
+          description: The file type as determined by MSIP
+        filesize:
+          type: integer
+          description: The file size
+  responses:  
+    InboundResponse200:
+      description: Request processed successfully. 
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                type: string
+                description: >
+                  If ‘skip’ is returned, the file will continue to be inspected by any other MSIP content inspection,
+                  and if no malicious content is found, will allow the file download to the client.
+                enum: ["accepted", "skip"]
+                example: "accepted"
+              uuid: 
+                type: string
+                description: Unique identifier (which may be the sha256 hash)
+                example: “<unique identifier>”   
+    Success200:
+      description: Request processed successfully. 
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              result:
+                type: string
+                description: Should respond with `found` or 404.
+                example: "found"                 
+              uuid: 
+                type: string
+                description: Unique identifier (which may be the sha256 hash)
+                example: “<unique identifier>”
+
+    Error400:      
+      description: >
+        Bad request
+        Plugin will halt and fallback to configured on-error outcome.
+      content:
+        application/json:
+          schema:
+            type: object
+    Error401:      
+      description: >
+        Unauthorized request
+        Plugin will halt and fallback to configured on-error outcome.
+      content:
+        application/json:
+          schema:
+            type: object
+    Error404:      
+      description: >
+        Identified (SHA256/UUID) was not found.
+        Plugin will halt and fallback to configured on-error outcome.
+      content:
+        application/json:
+          schema:
+            type: object
+
+    Error422:
+      description: >
+        Unprocessable Entity - Could not process the submitted file
+        Plugin will halt and fallback to configured on-error outcome.
+      content:
+        application/json:
+          schema:
+            type: object
+
+    Error500:
+      description: >
+        Internal Server Error
+        Plugin will halt and fallback to configured on-error outcome.
+      content:
+        application/json:
+          schema:
+            type: object
+    Error503:
+      description: >
+        Service Unavailable
+        Plugin will halt and fallback to configured on-error outcome.
+      content:
+        application/json:
+          schema:
+            type: object
